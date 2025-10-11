@@ -1,5 +1,5 @@
 import {useEffect, useReducer, useState} from "react";
-import {PLAYERS, pointsReducer} from "./reducer.ts";
+import {defaultState, PLAYERS, pointsReducer, STORAGE_KEY} from "./reducer.ts";
 import {
     Box,
     Button,
@@ -11,49 +11,14 @@ import {
     List,
     ListItem,
     Rating,
-    Switch,
-    TextField
+    Switch
 } from "@mui/material";
-
-export type PointsState = {
-    totals: Record<typeof PLAYERS[number], number>;
-    journal: JournalItem[];
-}
-
-export type JournalItem = {
-    player: typeof PLAYERS[number];
-    actionType: 'ADD' | 'SUBTRACT';
-    points: number;
-    comment: string;
-}
-
-const STORAGE_KEY = 'POINTS_JOURNAL';
-
-const defaultState = () => {
-    const defaultState = {
-        totals: {
-            [PLAYERS[0]]: 0,
-            [PLAYERS[1]]: 0,
-            [PLAYERS[2]]: 0,
-        },
-        journal: []
-    };
-
-    try {
-        const stateString = localStorage.getItem(STORAGE_KEY);
-        if (!stateString) return defaultState;
-
-        return JSON.parse(stateString) as PointsState;
-    } catch (e) {
-        console.error("Can't load the state", e)
-        return defaultState
-    }
-}
+import {BasicForm} from "./BasicForm.tsx";
+import {PresetsForm} from "./PresetsForm.tsx";
 
 export const Points = () => {
     const [state, dispatch] = useReducer(pointsReducer, undefined, defaultState);
     const [currentPlayer, setCurrentPlayer] = useState<typeof PLAYERS[number] | undefined>();
-    const [comment, setComment] = useState('');
     const [showJournal, setShowJournal] = useState(false);
 
     useEffect(() => {
@@ -76,66 +41,16 @@ export const Points = () => {
 
             {currentPlayer && (<>
 
-                <Box sx={{m: 2}}>
-                    <TextField label="Komentarz" variant="outlined" value={comment}
-                               onChange={(e) => setComment(e.target.value)}/>
-                </Box>
-
-                <Box>
-                    <ButtonGroup color="success" variant="outlined">
-                        <Button onClick={() => {
-                            setComment('');
-                            dispatch({
-                                type: 'ADD',
-                                payload: {player: currentPlayer, points: 1, actionType: 'ADD', comment: comment || 'Porcja warzyw'}
-                            });
-                        }}>
-                            Porcja warzyw
-                        </Button>
-                        <Button onClick={() => {
-                            setComment('');
-                            dispatch({
-                                type: 'ADD',
-                                payload: {player: currentPlayer, points: 2, actionType: 'ADD', comment: comment || 'Coś nowego'}
-                            });
-                        }}>
-                            Coś nowego
-                        </Button>
-                    </ButtonGroup>
-                </Box>
-
-                <Box>
-                    <ButtonGroup color="error" variant="outlined">
-                        <Button onClick={() => {
-                            setComment('');
-                            dispatch({
-                                type: 'SUBTRACT',
-                                payload: {player: currentPlayer, points: 3, actionType: 'SUBTRACT', comment: comment || 'Porcja słodkiego'}
-                            });
-                        }}>
-                            Porcja słodkiego
-                        </Button>
-                        <Button onClick={() => {
-                            setComment('');
-                            dispatch({
-                                type: 'SUBTRACT',
-                                payload: {player: currentPlayer, points: 2, actionType: 'SUBTRACT', comment: comment || '5 minut komputera'}
-                            });
-                        }}>
-                            5 minut komputera
-                        </Button>
-                    </ButtonGroup>
-                </Box>
+                {state.mode === 'basic' ? <BasicForm player={currentPlayer} dispatch={dispatch} /> : <PresetsForm player={currentPlayer} dispatch={dispatch} />}
 
                 <Box gap={2}>
                     <FormControlLabel
                         control={<Switch checked={showJournal} onChange={() => setShowJournal(!showJournal)} />}
-                        label="Show"
+                        label="Historia"
                     />
                     <Collapse in={showJournal}>
                         <List>
                             {state.journal.filter(({player}) => player === currentPlayer).reverse().map((item) => {
-                                console.log({ item})
                                 return (
                                     <ListItem
                                         style={{color: item.actionType === 'ADD' ? 'green' : 'red'}}>
@@ -148,7 +63,6 @@ export const Points = () => {
                                                 <Rating name="read-only" value={item.points} readOnly />
                                             </Grid>
                                         </Grid>
-
                                     </ListItem>
                                 );
                             })}
@@ -160,6 +74,9 @@ export const Points = () => {
             </>)}
         </Container>
 
+        <Button variant="contained" onClick={() => {
+            dispatch({type: 'MODE', payload: {mode: state.mode === 'basic' ? 'presets' : 'basic'}});
+        }} sx={{ mt: 4 }}>Change mode</Button>
         <Button variant="contained" color="error" onClick={() => {
             dispatch({type: 'RESET'});
         }} sx={{ mt: 4 }}>Reset</Button>
