@@ -2,33 +2,29 @@ export const PLAYERS = ['Kuba', 'Wojtek', 'Tomek'];
 
 export type Player = typeof PLAYERS[number];
 
+export type PointsType = 'ADD' | 'SUBTRACT';
+
 export type PointsAction = {
-    type: 'ADD' | 'SUBTRACT';
+    type: PointsType;
     payload: {
         player: Player;
         points: number;
-        actionType: 'ADD' | 'SUBTRACT';
         comment: string;
     }
 } | {
     type: 'RESET';
-} | {
-    type: 'MODE';
-    payload: {
-        mode: 'basic' | 'presets';
-    }
 }
 
 
 export type PointsState = {
     totals: Record<Player, number>;
     journal: JournalItem[];
-    mode?: 'basic' | 'presets';
 }
 export type JournalItem = {
     player: Player;
     actionType: 'ADD' | 'SUBTRACT';
     points: number;
+    added?: number;
     comment: string;
 }
 export const STORAGE_KEY = 'POINTS_JOURNAL';
@@ -41,7 +37,6 @@ export const defaultState = () => {
             [PLAYERS[2]]: 0,
         },
         journal: [],
-        mode: 'basic' as const,
     };
 
     try {
@@ -55,7 +50,7 @@ export const defaultState = () => {
     }
 }
 
-export const pointsReducer = (state: PointsState, action: PointsAction) => {
+export const pointsReducer = (state: PointsState, action: PointsAction): PointsState => {
     switch (action.type) {
         case "ADD":
             return {
@@ -67,10 +62,11 @@ export const pointsReducer = (state: PointsState, action: PointsAction) => {
                 journal: [
                     ...state.journal,
                     {
+                        actionType: action.type,
                         player: action.payload.player,
                         points: action.payload.points,
-                        actionType: action.payload.actionType,
-                        comment: action.payload.comment
+                        comment: action.payload.comment,
+                        added: +Date.now(),
                     }
                 ]
             };
@@ -84,17 +80,13 @@ export const pointsReducer = (state: PointsState, action: PointsAction) => {
                 journal: [
                     ...state.journal,
                     {
+                        actionType: action.type,
                         player: action.payload.player,
                         points: action.payload.points,
-                        actionType: action.payload.actionType,
-                        comment: action.payload.comment
+                        comment: action.payload.comment,
+                        added: +Date.now(),
                     }
                 ]
-            };
-        case "MODE":
-            return {
-                ...state,
-                mode: action.payload.mode,
             };
         case "RESET":
             return {
