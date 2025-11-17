@@ -38,6 +38,7 @@ export const defaultState = () => {
             [PLAYERS[0]]: 0,
             [PLAYERS[1]]: 0,
             [PLAYERS[2]]: 0,
+            [PLAYERS[3]]: 0,
         },
         journal: [],
     };

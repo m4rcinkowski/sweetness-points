@@ -1,10 +1,11 @@
 import {Box, Button, ButtonGroup, Grid} from "@mui/material";
 import type {Dispatch} from "react";
-import {useState} from "react";
+import {useRef, useState} from "react";
 import type {Player, PointsAction, PointsType} from "./reducer.ts";
 import {partition} from 'lodash'
 import {PresetConfirmationDialog} from "./PresetConfirmationDialog.tsx";
 import {Star} from "@mui/icons-material";
+import {usePoints} from "./usePoints.ts";
 
 export type PresetItem = {
     label: string;
@@ -49,6 +50,60 @@ const PRESETS: PresetItem[] = [
     },
 ]
 
+
+const PresetButton: React.FC<{ preset: PresetItem, currentPlayer: Player, onDoubleClick: () => void }> = ({
+                                                                                                              preset,
+                                                                                                              currentPlayer,
+                                                                                                              onDoubleClick
+                                                                                                          }) => {
+    const {dispatch} = usePoints();
+    const pressTimer = useRef<NodeJS.Timeout | null>(null);
+    const isLongPress = useRef(false);
+
+    const handleMouseDown = () => {
+        isLongPress.current = false;
+        pressTimer.current = setTimeout(() => {
+            isLongPress.current = true;
+            onDoubleClick();
+        }, 500);
+    };
+
+    const handleMouseUp = () => {
+        if (pressTimer.current) {
+            clearTimeout(pressTimer.current);
+        }
+        
+        if (!isLongPress.current) {
+            dispatch({
+                type: preset.type,
+                payload: {
+                    player: currentPlayer,
+                    points: preset.points,
+                    comment: preset.label
+                }
+            });
+        }
+    };
+
+    const handleMouseLeave = () => {
+        if (pressTimer.current) {
+            clearTimeout(pressTimer.current);
+        }
+    };
+
+    return <Button
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onTouchStart={handleMouseDown}
+        onTouchEnd={handleMouseUp}
+        endIcon={<div>
+            {Array.from({length: preset.points}, (_, i) => <Star key={i}/>)}
+        </div>}>
+        {preset.label}
+    </Button>
+}
+
 const [additions, subtractions] = partition(PRESETS, ({type}) => type === 'ADD');
 
 export const PresetsForm = ({player: currentPlayer, dispatch}: {
@@ -64,22 +119,10 @@ export const PresetsForm = ({player: currentPlayer, dispatch}: {
                     <ButtonGroup color="success" variant="outlined">
                         <Grid container rowSpacing={1} columnSpacing={{xs: 1, sm: 2, md: 3}}>
                             {additions.map((preset, i) => (
-                                <Button key={`additions-${i}`} onClick={() => {
-                                    if (preset.requiresConfirmation) {
-                                        setConfirmationItem(preset);
-                                    } else {
-                                        dispatch({
-                                            type: preset.type,
-                                            payload: {
-                                                player: currentPlayer,
-                                                points: preset.points,
-                                                comment: preset.label
-                                            }
-                                        });
-                                    }
-                                }} endIcon={preset.requiresConfirmation ? <Star/> : undefined}>
-                                    {preset.label}
-                                </Button>
+                                <PresetButton key={`additions-${i}`} currentPlayer={currentPlayer} preset={preset}
+                                              onDoubleClick={() => {
+                                                  setConfirmationItem(preset);
+                                              }}/>
                             ))}
                         </Grid>
                     </ButtonGroup>
@@ -89,41 +132,31 @@ export const PresetsForm = ({player: currentPlayer, dispatch}: {
                     <ButtonGroup color="error" variant="outlined">
                         <Grid container rowSpacing={1} columnSpacing={{xs: 1, sm: 2, md: 3}}>
                             {subtractions.map((preset, i) => (
-                                <Button key={`subtractions-${i}`} onClick={() => {
-                                    if (preset.requiresConfirmation) {
-                                        setConfirmationItem(preset);
-                                    } else {
-                                        dispatch({
-                                            type: preset.type,
-                                            payload: {
-                                                player: currentPlayer,
-                                                points: preset.points,
-                                                comment: preset.label
-                                            }
-                                        });
-                                    }
-                                }} endIcon={preset.requiresConfirmation ? <Star/> : undefined}>
-                                    {preset.label}
-                                </Button>
+                                <PresetButton key={`subtractions-${i}`} currentPlayer={currentPlayer} preset={preset}
+                                              onDoubleClick={() => {
+                                                  setConfirmationItem(preset);
+                                              }}/>
                             ))}
                         </Grid>
                     </ButtonGroup>
                 </Box>
             </Box>
 
-            {confirmationItem && <PresetConfirmationDialog item={confirmationItem} onConfirm={(item) => {
-                dispatch({
-                    type: item.type,
-                    payload: {
-                        player: currentPlayer,
-                        points: item.points,
-                        comment: item.label
-                    }
-                });
-                setConfirmationItem(null);
-            }} onCancel={() => {
-                setConfirmationItem(null);
-            }}/>}
+            {
+                confirmationItem && <PresetConfirmationDialog item={confirmationItem} onConfirm={(item) => {
+                    dispatch({
+                        type: item.type,
+                        payload: {
+                            player: currentPlayer,
+                            points: item.points,
+                            comment: item.label
+                        }
+                    });
+                    setConfirmationItem(null);
+                }} onCancel={() => {
+                    setConfirmationItem(null);
+                }}/>
+            }
         </>
     )
 }
