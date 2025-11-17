@@ -1,4 +1,4 @@
-export const PLAYERS = ['Kuba', 'Wojtek', 'Tomek'];
+export const PLAYERS = ['Kuba', 'Wojtek', 'Tomek', 'Agnieszka'];
 
 export type Player = typeof PLAYERS[number];
 

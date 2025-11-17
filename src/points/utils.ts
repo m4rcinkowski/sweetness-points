@@ -22,3 +22,26 @@ export const formatRelative = (date: Date, locale = navigator.language) => {
         }
     }
 };
+
+export async function compressText(text: string, format = 'gzip') {
+    const byteArray = new TextEncoder().encode(text);
+    const cs = new CompressionStream(format as CompressionFormat);
+    const writer = cs.writable.getWriter();
+    writer.write(byteArray);
+
+    writer.close();
+    const compressedBuffer = await new Response(cs.readable).arrayBuffer();
+
+    return new Uint8Array(compressedBuffer);
+}
+
+export async function decompressText(compressedBytes: BufferSource, format = 'gzip') {
+    const ds = new DecompressionStream(format as CompressionFormat);
+    const writer = ds.writable.getWriter();
+    writer.write(compressedBytes);
+    writer.close();
+    const decompressedBuffer = await new Response(ds.readable).arrayBuffer();
+
+    return new TextDecoder().decode(decompressedBuffer);
+}
+

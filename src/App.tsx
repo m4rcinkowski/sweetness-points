@@ -12,31 +12,31 @@ function App() {
     const importParam = !!(new URLSearchParams(window.location.search).get('import')?.trim().length);
 
     return (
-        <PointsProvider>
-            <CssBaseline/>
-            <AppBar position="static">
-                <Toolbar>
-                    <IconButton
-                        size="large"
-                        edge="start"
-                        color="inherit"
-                        aria-label="menu"
-                        sx={{mr: 2}}
-                        onClick={() => setDrawerOpen(!drawerOpen)}
-                    >
-                        <MenuIcon/>
-                    </IconButton>
-                </Toolbar>
-            </AppBar>
-            <AdminDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)}/>
+        <SnackbarProvider>
+            <PointsProvider>
+                <CssBaseline/>
+                <AppBar position="static">
+                    <Toolbar>
+                        <IconButton
+                            size="large"
+                            edge="start"
+                            color="inherit"
+                            aria-label="menu"
+                            sx={{mr: 2}}
+                            onClick={() => setDrawerOpen(!drawerOpen)}
+                        >
+                            <MenuIcon/>
+                        </IconButton>
+                    </Toolbar>
+                </AppBar>
+                <AdminDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)}/>
 
-            <Container maxWidth={false} disableGutters
-                       sx={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                {importParam ? <Import/> : <Points/>}
-            </Container>
-
-            <SnackbarProvider/>
-        </PointsProvider>
+                <Container maxWidth={false} disableGutters
+                           sx={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    {importParam ? <Import/> : <Points/>}
+                </Container>
+            </PointsProvider>
+        </SnackbarProvider>
     )
 }
 
