@@ -13,6 +13,9 @@ export type PointsAction = {
     }
 } | {
     type: 'RESET';
+} | {
+    type: 'SET_STATE';
+    payload: PointsState;
 }
 
 
@@ -93,6 +96,8 @@ export const pointsReducer = (state: PointsState, action: PointsAction): PointsS
                 totals: {},
                 journal: []
             };
+        case "SET_STATE":
+            return action.payload;
         default:
             return state;
     }

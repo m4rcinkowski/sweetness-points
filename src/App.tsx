@@ -5,9 +5,11 @@ import {PointsProvider} from "./points/PointsProvider.tsx";
 import {AdminDrawer} from "./points/AdminDrawer.tsx";
 import {useState} from "react";
 import {SnackbarProvider} from "notistack";
+import {Import} from "./points/Import.tsx";
 
 function App() {
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const importParam = !!(new URLSearchParams(window.location.search).get('import')?.trim().length);
 
     return (
         <PointsProvider>
@@ -30,7 +32,7 @@ function App() {
 
             <Container maxWidth={false} disableGutters
                        sx={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <Points/>
+                {importParam ? <Import/> : <Points/>}
             </Container>
 
             <SnackbarProvider/>

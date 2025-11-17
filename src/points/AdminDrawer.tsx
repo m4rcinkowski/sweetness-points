@@ -11,12 +11,12 @@ export const AdminDrawer = ({open, onClose}: { open: boolean, onClose: DrawerPro
                 <ListItem>
                     <ListItemButton color="error" onClick={() => {
                         const link = new URL(location.href);
-                        link.searchParams.set('reset', JSON.stringify(state));
+                        link.searchParams.set('import', JSON.stringify(state));
                         navigator.clipboard.writeText(link.href).then(() => {
                             enqueueSnackbar('Link skopiowany do schowka.')
                         })
                     }}>
-                        <ListItemText primary={"Udostępnij"}/>
+                        <ListItemText primary={"Udostępnij punkty"}/>
                     </ListItemButton>
                 </ListItem>
 
@@ -25,6 +25,7 @@ export const AdminDrawer = ({open, onClose}: { open: boolean, onClose: DrawerPro
                 <ListItem>
                     <ListItemButton color="error" onClick={() => {
                         dispatch({type: 'RESET'});
+                        onClose?.({}, 'escapeKeyDown');
                     }}>
                         <ListItemText primary={"Resetuj"} slotProps={{primary: {color: "error"}}}/>
                     </ListItemButton>
@@ -32,6 +33,5 @@ export const AdminDrawer = ({open, onClose}: { open: boolean, onClose: DrawerPro
             </List>
 
         </Drawer>
-    )
-        ;
+    );
 }

@@ -1,5 +1,5 @@
-import {useEffect, useState} from "react";
-import {PLAYERS, STORAGE_KEY} from "./reducer.ts";
+import {useState} from "react";
+import {PLAYERS} from "./reducer.ts";
 import {
     Box,
     Button,
@@ -21,14 +21,6 @@ export const Points = () => {
     const {state, dispatch} = usePoints()
     const [currentPlayer, setCurrentPlayer] = useState<typeof PLAYERS[number] | undefined>();
     const [showJournal, setShowJournal] = useState(false);
-
-    useEffect(() => {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        } catch (error) {
-            console.error("Error saving to localStorage:", error);
-        }
-    }, [state]);
 
     return <Container sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
         <Container sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
@@ -54,7 +46,7 @@ export const Points = () => {
                             {state.journal.filter(({player}) => player === currentPlayer).reverse().map((item, i) => {
                                 return (
                                     <ListItem key={item.added ?? i}
-                                        style={{color: item.actionType === 'ADD' ? 'green' : 'red'}}>
+                                              style={{color: item.actionType === 'ADD' ? 'green' : 'red'}}>
 
                                         <Grid container sx={{width: '100%'}}>
                                             <Grid container direction="column" size={6}>
