@@ -1,13 +1,21 @@
 import * as React from "react";
-import {useState} from "react";
+import {useImperativeHandle, useRef, useState} from "react";
 import type {PresetItem} from "./PresetsForm";
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
 
-type Props = { item: PresetItem, onConfirm: (confirmedItem: PresetItem) => void, onCancel: () => void }
+type Props = { item: PresetItem, onConfirm: (confirmedItem: PresetItem) => void, onCancel: () => void, ref: React.RefObject<any> }
 
-export const PresetConfirmationDialog: React.FC<Props> = ({item, onConfirm, onCancel}) => {
+export const PresetConfirmationDialog: React.FC<Props> = ({item, onConfirm, onCancel, ref}) => {
     const [label, setLabel] = useState(item.label);
     const [points, setPoints] = useState(item.points);
+
+    const labelRef = useRef<HTMLInputElement>(null);
+
+    useImperativeHandle(ref, () => ({
+        focus: () => {
+            labelRef.current?.focus();
+        }
+    }));
 
     return (
         <Dialog open>
@@ -19,6 +27,7 @@ export const PresetConfirmationDialog: React.FC<Props> = ({item, onConfirm, onCa
                 gap: 2,
             }}>
                 <TextField
+                    inputRef={labelRef}
                     label="Label"
                     value={label}
                     onChange={(e) => setLabel(e.target.value)}

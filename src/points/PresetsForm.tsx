@@ -51,28 +51,35 @@ const PRESETS: PresetItem[] = [
 ]
 
 
-const PresetButton: React.FC<{ preset: PresetItem, currentPlayer: Player, onDoubleClick: () => void }> = ({
+const PresetButton: React.FC<{ preset: PresetItem, currentPlayer: Player, onLongTap: () => void }> = ({
                                                                                                               preset,
                                                                                                               currentPlayer,
-                                                                                                              onDoubleClick
+                                                                                                              onLongTap
                                                                                                           }) => {
     const {dispatch} = usePoints();
     const pressTimer = useRef<NodeJS.Timeout | null>(null);
     const isLongPress = useRef(false);
+    const buttonRef = useRef<HTMLButtonElement>(null);
 
-    const handleMouseDown = () => {
+    const handleMouseDown: React.MouseEventHandler<HTMLButtonElement> = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
         isLongPress.current = false;
         pressTimer.current = setTimeout(() => {
             isLongPress.current = true;
-            onDoubleClick();
+            onLongTap();
         }, 500);
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp: React.MouseEventHandler<HTMLButtonElement> = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
         if (pressTimer.current) {
             clearTimeout(pressTimer.current);
         }
-        
+
         if (!isLongPress.current) {
             dispatch({
                 type: preset.type,
@@ -83,6 +90,8 @@ const PresetButton: React.FC<{ preset: PresetItem, currentPlayer: Player, onDoub
                 }
             });
         }
+
+        buttonRef.current?.blur();
     };
 
     const handleMouseLeave = () => {
@@ -92,14 +101,19 @@ const PresetButton: React.FC<{ preset: PresetItem, currentPlayer: Player, onDoub
     };
 
     return <Button
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-        onTouchStart={handleMouseDown}
-        onTouchEnd={handleMouseUp}
+        ref={buttonRef}
+        onPointerDown={handleMouseDown}
+        onPointerUp={handleMouseUp}
+        onPointerOut={handleMouseLeave}
+        onContextMenu={(e) => e.preventDefault()}
         endIcon={<div>
             {Array.from({length: preset.points}, (_, i) => <Star key={i}/>)}
-        </div>}>
+        </div>}
+
+    sx={{
+        userSelect: 'none',           /* Standard: blocks text selection */
+        touchAction: 'none',
+    }}>
         {preset.label}
     </Button>
 }
@@ -111,6 +125,7 @@ export const PresetsForm = ({player: currentPlayer, dispatch}: {
     dispatch: Dispatch<PointsAction>
 }) => {
     const [confirmationItem, setConfirmationItem] = useState<PresetItem | null>(null);
+    const confirmationDialogRef = useRef<any>(null);
 
     return (
         <>
@@ -120,8 +135,9 @@ export const PresetsForm = ({player: currentPlayer, dispatch}: {
                         <Grid container rowSpacing={1} columnSpacing={{xs: 1, sm: 2, md: 3}}>
                             {additions.map((preset, i) => (
                                 <PresetButton key={`additions-${i}`} currentPlayer={currentPlayer} preset={preset}
-                                              onDoubleClick={() => {
+                                              onLongTap={() => {
                                                   setConfirmationItem(preset);
+                                                  confirmationDialogRef.current?.focus();
                                               }}/>
                             ))}
                         </Grid>
@@ -133,8 +149,9 @@ export const PresetsForm = ({player: currentPlayer, dispatch}: {
                         <Grid container rowSpacing={1} columnSpacing={{xs: 1, sm: 2, md: 3}}>
                             {subtractions.map((preset, i) => (
                                 <PresetButton key={`subtractions-${i}`} currentPlayer={currentPlayer} preset={preset}
-                                              onDoubleClick={() => {
+                                              onLongTap={() => {
                                                   setConfirmationItem(preset);
+                                                  confirmationDialogRef.current?.focus();
                                               }}/>
                             ))}
                         </Grid>
@@ -143,7 +160,8 @@ export const PresetsForm = ({player: currentPlayer, dispatch}: {
             </Box>
 
             {
-                confirmationItem && <PresetConfirmationDialog item={confirmationItem} onConfirm={(item) => {
+                confirmationItem &&
+                <PresetConfirmationDialog ref={confirmationDialogRef} item={confirmationItem} onConfirm={(item) => {
                     dispatch({
                         type: item.type,
                         payload: {
